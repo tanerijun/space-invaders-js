@@ -18,6 +18,7 @@ class Player {
     };
     this.speed = 5;
     this.rotation = 0;
+    this.opacity = 1;
 
     const image = new Image();
     image.src = "assets/image/spaceship.png";
@@ -35,7 +36,7 @@ class Player {
 
   #draw() {
     ctx.save();
-
+    ctx.globalAlpha = this.opacity;
     // Rotate player (for tilt effect)
     ctx.translate(this.position.x + this.width / 2, this.position.y + this.height / 2); // makes the middle of player (0, 0)
     ctx.rotate(this.rotation);
@@ -280,6 +281,7 @@ class Game {
     this.enemyGrids = [];
     this.particles = [];
     this.isProjectileFired = false;
+    this.over = false;
 
     this.keys = {
       ArrowLeft: {
@@ -291,6 +293,8 @@ class Game {
     };
 
     window.addEventListener("keydown", ({ key }) => {
+      if (game.over) return;
+
       switch (key) {
         case "ArrowLeft":
           this.keys.ArrowLeft.pressed = true;
@@ -411,8 +415,12 @@ class Game {
         projectile.position.x + projectile.width > this.player.position.x &&
         projectile.position.x < this.player.position.x + this.player.width
       ) {
+        if (game.over) return;
+
         setTimeout(() => {
           this.invaderProjectiles.splice(i, 1);
+          this.player.opacity = 0;
+          game.over = true;
         }, 0);
 
         // Explosion effect
@@ -451,5 +459,5 @@ class Game {
   }
 }
 
-const game = new Game();
+let game = new Game();
 game.loop();
