@@ -125,13 +125,12 @@ class EnemyGrid {
       x: 0,
       y: 0,
     };
-
     this.velocity = {
       x: 0.5,
       y: 0,
     };
-
     this.invaders = [];
+    this.isCleared = false;
 
     const size = 30;
     const columns = Math.floor(Math.random() * 10 + 5);
@@ -177,6 +176,10 @@ class EnemyGrid {
         }
       });
     });
+
+    if (this.invaders.length === 0) {
+      this.isCleared = true;
+    }
   }
 }
 
@@ -234,8 +237,11 @@ class Game {
 
     this.player.update();
 
-    this.enemyGrids.forEach((grid) => {
+    this.enemyGrids.forEach((grid, i) => {
       grid.update({ projectiles: this.projectiles });
+      if (grid.isCleared) {
+        this.enemyGrids.splice(i, 1);
+      }
     });
 
     if (
