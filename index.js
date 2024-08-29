@@ -1,3 +1,4 @@
+const scoreEl = document.querySelector("#score-el");
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -282,6 +283,7 @@ class Game {
     this.particles = [];
     this.isProjectileFired = false;
     this.over = false;
+    this.elapsedTime = 0;
 
     this.keys = {
       ArrowLeft: {
@@ -443,6 +445,11 @@ class Game {
       this.player.moveRight();
     } else {
       this.player.stop();
+    }
+
+    if (!this.over) {
+      this.elapsedTime++;
+      scoreEl.textContent = Math.floor(this.elapsedTime / 1000); // score +1 each second
     }
   }
 
