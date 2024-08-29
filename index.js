@@ -117,6 +117,15 @@ class Invader {
     this.position.x += velocity.x;
     this.position.y += velocity.y;
   }
+
+  shoot(invaderProjectiles) {
+    invaderProjectiles.push(
+      new InvaderProjectile({
+        position: { x: this.position.x + this.width / 2, y: this.position.y + this.height + 5 },
+        velocity: { x: 0, y: 3 },
+      }),
+    );
+  }
 }
 
 class EnemyGrid {
@@ -146,7 +155,7 @@ class EnemyGrid {
     }
   }
 
-  update({ projectiles }) {
+  update({ projectiles, invaderProjectiles }) {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
@@ -158,6 +167,10 @@ class EnemyGrid {
     this.invaders.forEach((invader, i) => {
       invader.update({ velocity: this.velocity });
 
+      if (Math.random() * 100 > 99.95) {
+        invader.shoot(invaderProjectiles);
+      }
+
       projectiles.forEach((projectile, j) => {
         if (
           projectile.position.x + projectile.radius >= invader.position.x &&
@@ -168,6 +181,8 @@ class EnemyGrid {
           setTimeout(() => {
             const invaderFound = this.invaders.find((invader2) => invader2 === invader);
             const projectileFound = projectiles.find((projectile2) => projectile2 == projectile);
+
+            // Remove invader and projectile
             if (invaderFound && projectileFound) {
               this.invaders.splice(i, 1);
               projectiles.splice(j, 1);
@@ -183,10 +198,31 @@ class EnemyGrid {
   }
 }
 
+class InvaderProjectile {
+  constructor({ position, velocity }) {
+    this.position = position;
+    this.velocity = velocity;
+    this.width = 3;
+    this.height = 10;
+  }
+
+  #draw() {
+    ctx.fillStyle = "white";
+    ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+  }
+
+  update() {
+    this.#draw();
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+  }
+}
+
 class Game {
   constructor() {
     this.player = new Player();
     this.projectiles = [];
+    this.invaderProjectiles = [];
     this.enemyGrids = [];
 
     this.keys = {
@@ -238,7 +274,7 @@ class Game {
     this.player.update();
 
     this.enemyGrids.forEach((grid, i) => {
-      grid.update({ projectiles: this.projectiles });
+      grid.update({ projectiles: this.projectiles, invaderProjectiles: this.invaderProjectiles });
       if (grid.isCleared) {
         this.enemyGrids.splice(i, 1);
       }
@@ -258,6 +294,24 @@ class Game {
         }, 0);
       } else {
         projectile.update();
+      }
+    });
+
+    this.invaderProjectiles.forEach((projectile, i) => {
+      if (projectile.position.y >= canvas.height) {
+        setTimeout(() => {
+          this.invaderProjectiles.splice(i, 1);
+        }, 0);
+      } else {
+        projectile.update();
+      }
+
+      if (
+        projectile.position.y + projectile.height >= this.player.position.y &&
+        projectile.position.x + projectile.width > this.player.position.x &&
+        projectile.position.x < this.player.position.x + this.player.width
+      ) {
+        console.log("YOU LOSE");
       }
     });
 
