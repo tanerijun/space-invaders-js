@@ -147,7 +147,7 @@ class EnemyGrid {
     }
   }
 
-  update() {
+  update({ projectiles }) {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
@@ -156,8 +156,26 @@ class EnemyGrid {
       this.velocity.y += 0.05;
     }
 
-    this.invaders.forEach((invader) => {
+    this.invaders.forEach((invader, i) => {
       invader.update({ velocity: this.velocity });
+
+      projectiles.forEach((projectile, j) => {
+        if (
+          projectile.position.x + projectile.radius >= invader.position.x &&
+          projectile.position.x - projectile.radius <= invader.position.x + invader.width &&
+          projectile.position.y - projectile.radius <= invader.position.y + invader.height &&
+          projectile.position.y + projectile.radius >= invader.position.y
+        ) {
+          setTimeout(() => {
+            const invaderFound = this.invaders.find((invader2) => invader2 === invader);
+            const projectileFound = projectiles.find((projectile2) => projectile2 == projectile);
+            if (invaderFound && projectileFound) {
+              this.invaders.splice(i, 1);
+              projectiles.splice(j, 1);
+            }
+          }, 0);
+        }
+      });
     });
   }
 }
@@ -166,7 +184,7 @@ class Game {
   constructor() {
     this.player = new Player();
     this.projectiles = [];
-    this.enemyGrids = [new EnemyGrid()];
+    this.enemyGrids = [];
 
     this.keys = {
       ArrowLeft: {
@@ -200,7 +218,6 @@ class Game {
           this.keys.ArrowRight.pressed = false;
           break;
         case "z":
-          console.log("z");
           break;
       }
     });
@@ -218,7 +235,7 @@ class Game {
     this.player.update();
 
     this.enemyGrids.forEach((grid) => {
-      grid.update();
+      grid.update({ projectiles: this.projectiles });
     });
 
     if (
