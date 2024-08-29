@@ -222,12 +222,13 @@ class InvaderProjectile {
 }
 
 class Particle {
-  constructor({ position, velocity, radius, color }) {
+  constructor({ position, velocity, radius, color, fades = true }) {
     this.position = position;
     this.velocity = velocity;
     this.radius = radius;
     this.color = color;
     this.opacity = 1;
+    this.fades = fades;
   }
 
   #draw() {
@@ -245,8 +246,10 @@ class Particle {
     this.#draw();
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
-    this.opacity -= 0.01;
-    this.opacity = Math.max(0, this.opacity); // ReLU because -opacity is not transparent
+    if (this.fades) {
+      this.opacity -= 0.01;
+      this.opacity = Math.max(0, this.opacity); // ReLU because -opacity is not transparent
+    }
   }
 
   static createParticles({ container, object, color }) {
@@ -318,6 +321,25 @@ class Game {
       }
     });
 
+    // Add background stars
+    for (let i = 0; i < canvas.width * 0.025; i++) {
+      this.particles.push(
+        new Particle({
+          position: {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+          },
+          velocity: {
+            x: 0,
+            y: 0.2,
+          },
+          radius: Math.random() * 3,
+          color: "white",
+          fades: false,
+        }),
+      );
+    }
+
     this.loop = this.loop.bind(this);
   }
 
@@ -331,7 +353,13 @@ class Game {
     this.player.update();
 
     this.particles.forEach((particle, i) => {
-      // Remove particle that's done
+      // Reposition star particles when they go off screen
+      if (particle.position.y - particle.radius >= canvas.height) {
+        particle.position.x = Math.random() * canvas.width;
+        particle.position.y = Math.random() * canvas.height;
+      }
+
+      // Remove explosion particle that's done
       if (particle.opacity <= 0) {
         setTimeout(() => {
           this.particles.splice(i, 1);
