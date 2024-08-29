@@ -126,7 +126,7 @@ class EnemyGrid {
       y: 0,
     };
     this.velocity = {
-      x: 0.5,
+      x: 1,
       y: 0,
     };
     this.invaders = [];
