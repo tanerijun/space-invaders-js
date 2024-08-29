@@ -92,15 +92,8 @@ class Projectile {
 }
 
 class Invader {
-  constructor() {
-    this.position = {
-      x: 30,
-      y: 30,
-    };
-    this.velocity = {
-      x: 0,
-      y: 0,
-    };
+  constructor({ position }) {
+    this.position = position;
 
     const image = new Image();
     image.src = "assets/image/invader.png";
@@ -115,14 +108,57 @@ class Invader {
     ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
   }
 
-  update() {
+  update({ velocity }) {
     if (!this.image) {
       return;
     }
 
     this.#draw();
+    this.position.x += velocity.x;
+    this.position.y += velocity.y;
+  }
+}
+
+class EnemyGrid {
+  constructor() {
+    this.position = {
+      x: 0,
+      y: 0,
+    };
+
+    this.velocity = {
+      x: 0.5,
+      y: 0,
+    };
+
+    this.invaders = [];
+
+    const size = 30;
+    const columns = Math.floor(Math.random() * 10 + 5);
+    const rows = Math.floor(Math.random() * 5 + 2);
+
+    this.width = size * columns;
+    this.height = size * rows;
+
+    for (let x = 0; x < this.width; x += size) {
+      for (let y = 0; y < this.height; y += size) {
+        this.invaders.push(new Invader({ position: { x, y } }));
+      }
+    }
+  }
+
+  update() {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
+
+    if (this.position.x <= 0 || this.position.x + this.width > canvas.width) {
+      this.velocity.x = -this.velocity.x;
+      this.velocity.y += 0.05;
+    }
+
+    this.invaders.forEach((invader) => {
+      invader.update({ velocity: this.velocity });
+    });
   }
 }
 
@@ -130,7 +166,7 @@ class Game {
   constructor() {
     this.player = new Player();
     this.projectiles = [];
-    this.invaders = [new Invader()];
+    this.enemyGrids = [new EnemyGrid()];
 
     this.keys = {
       ArrowLeft: {
@@ -181,8 +217,8 @@ class Game {
 
     this.player.update();
 
-    this.invaders.forEach((invader) => {
-      invader.update();
+    this.enemyGrids.forEach((grid) => {
+      grid.update();
     });
 
     this.projectiles.forEach((projectile, i) => {
