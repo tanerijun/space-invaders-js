@@ -218,12 +218,36 @@ class InvaderProjectile {
   }
 }
 
+class Particle {
+  constructor({ position, velocity, radius, color }) {
+    this.position = position;
+    this.velocity = velocity;
+    this.radius = radius;
+    this.color = color;
+  }
+
+  #draw() {
+    ctx.beginPath();
+    ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  update() {
+    this.#draw();
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+  }
+}
+
 class Game {
   constructor() {
     this.player = new Player();
     this.projectiles = [];
     this.invaderProjectiles = [];
     this.enemyGrids = [];
+    this.isProjectileFired = false;
 
     this.keys = {
       ArrowLeft: {
@@ -243,7 +267,10 @@ class Game {
           this.keys.ArrowRight.pressed = true;
           break;
         case "z":
-          this.#spawnProjectile();
+          if (!this.isProjectileFired) {
+            this.#spawnProjectile();
+            this.isProjectileFired = true;
+          }
           break;
       }
     });
@@ -257,6 +284,7 @@ class Game {
           this.keys.ArrowRight.pressed = false;
           break;
         case "z":
+          this.isProjectileFired = false;
           break;
       }
     });
