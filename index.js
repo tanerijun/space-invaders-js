@@ -40,8 +40,8 @@ class Player {
     ctx.translate(this.position.x + this.width / 2, this.position.y + this.height / 2); // makes the middle of player (0, 0)
     ctx.rotate(this.rotation);
     ctx.translate(-this.position.x - this.width / 2, -this.position.y - this.height / 2); // revert to original coord system
-
     ctx.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+
     ctx.restore();
   }
 
@@ -69,10 +69,32 @@ class Player {
   }
 }
 
+class Projectile {
+  constructor({ position, velocity }) {
+    this.position = position;
+    this.velocity = velocity;
+    this.radius = 3;
+  }
+
+  #draw() {
+    ctx.beginPath();
+    ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
+    ctx.fillStyle = "red";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  update() {
+    this.#draw();
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+  }
+}
+
 class Game {
   constructor() {
     this.player = new Player();
-    this.playerSpeed = 5;
+    this.projectiles = [];
     this.keys = {
       ArrowLeft: {
         pressed: false,
@@ -91,7 +113,7 @@ class Game {
           this.keys.ArrowRight.pressed = true;
           break;
         case "z":
-          console.log("z");
+          this.#spawnProjectile();
           break;
       }
     });
@@ -122,6 +144,16 @@ class Game {
 
     this.player.update();
 
+    this.projectiles.forEach((projectile, i) => {
+      if (projectile.position.y + projectile.radius <= 0) {
+        setTimeout(() => {
+          this.projectiles.splice(i, 1);
+        }, 0);
+      } else {
+        projectile.update();
+      }
+    });
+
     const bothKeysArePressed = this.keys.ArrowLeft.pressed && this.keys.ArrowRight.pressed;
     if (!bothKeysArePressed && this.keys.ArrowLeft.pressed && this.player.position.x >= 0) {
       this.player.moveLeft();
@@ -134,6 +166,18 @@ class Game {
     } else {
       this.player.stop();
     }
+  }
+
+  #spawnProjectile() {
+    this.projectiles.push(
+      new Projectile({
+        position: {
+          x: this.player.position.x + this.player.width / 2,
+          y: this.player.position.y - 10,
+        },
+        velocity: { x: 0, y: -10 },
+      }),
+    );
   }
 }
 
