@@ -155,7 +155,7 @@ class EnemyGrid {
     }
   }
 
-  update({ projectiles, invaderProjectiles }) {
+  update({ projectiles, invaderProjectiles, particles }) {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
 
@@ -187,6 +187,9 @@ class EnemyGrid {
               this.invaders.splice(i, 1);
               projectiles.splice(j, 1);
             }
+
+            // Add explosion effect
+            Particle.createParticles({ container: particles, object: invader });
           }, 0);
         }
       });
@@ -224,20 +227,45 @@ class Particle {
     this.velocity = velocity;
     this.radius = radius;
     this.color = color;
+    this.opacity = 1;
   }
 
   #draw() {
+    ctx.save();
+    ctx.globalAlpha = this.opacity;
     ctx.beginPath();
     ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
     ctx.fillStyle = this.color;
     ctx.fill();
     ctx.closePath();
+    ctx.restore();
   }
 
   update() {
     this.#draw();
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
+    this.opacity -= 0.01;
+    this.opacity = Math.max(0, this.opacity); // ReLU because -opacity is not transparent
+  }
+
+  static createParticles({ container, object, color }) {
+    for (let i = 0; i < 15; i++) {
+      container.push(
+        new Particle({
+          position: {
+            x: object.position.x + object.width / 2,
+            y: object.position.y + object.height / 2,
+          },
+          velocity: {
+            x: (Math.random() - 0.5) * 2,
+            y: (Math.random() - 0.5) * 2,
+          },
+          radius: Math.random() * 3,
+          color: color || "#BAA0DE",
+        }),
+      );
+    }
   }
 }
 
@@ -247,6 +275,7 @@ class Game {
     this.projectiles = [];
     this.invaderProjectiles = [];
     this.enemyGrids = [];
+    this.particles = [];
     this.isProjectileFired = false;
 
     this.keys = {
@@ -301,8 +330,22 @@ class Game {
 
     this.player.update();
 
+    this.particles.forEach((particle, i) => {
+      // Remove particle that's done
+      if (particle.opacity <= 0) {
+        setTimeout(() => {
+          this.particles.splice(i, 1);
+        }, 0);
+      }
+      particle.update();
+    });
+
     this.enemyGrids.forEach((grid, i) => {
-      grid.update({ projectiles: this.projectiles, invaderProjectiles: this.invaderProjectiles });
+      grid.update({
+        projectiles: this.projectiles,
+        invaderProjectiles: this.invaderProjectiles,
+        particles: this.particles,
+      });
       if (grid.isCleared) {
         this.enemyGrids.splice(i, 1);
       }
@@ -334,12 +377,22 @@ class Game {
         projectile.update();
       }
 
+      // Projectile hits player
       if (
         projectile.position.y + projectile.height >= this.player.position.y &&
         projectile.position.x + projectile.width > this.player.position.x &&
         projectile.position.x < this.player.position.x + this.player.width
       ) {
-        console.log("YOU LOSE");
+        setTimeout(() => {
+          this.invaderProjectiles.splice(i, 1);
+        }, 0);
+
+        // Explosion effect
+        Particle.createParticles({
+          container: this.particles,
+          object: this.player,
+          color: "white",
+        });
       }
     });
 
