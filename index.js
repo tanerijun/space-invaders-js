@@ -144,7 +144,7 @@ class EnemyGrid {
     this.isCleared = false;
 
     const size = 30;
-    const columns = Math.floor(Math.random() * 10 + 6);
+    const columns = Math.floor(Math.random() * 9 + 6);
     const rows = Math.floor(Math.random() * 5 + 3);
 
     this.width = size * columns;
