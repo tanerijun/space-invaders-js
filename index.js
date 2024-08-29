@@ -221,6 +221,13 @@ class Game {
       grid.update();
     });
 
+    if (
+      this.enemyGrids.length === 0 ||
+      this.enemyGrids.at(-1).position.y > canvas.height / 2 - Math.floor(Math.random() * 150)
+    ) {
+      this.enemyGrids.push(new EnemyGrid());
+    }
+
     this.projectiles.forEach((projectile, i) => {
       if (projectile.position.y + projectile.radius <= 0) {
         setTimeout(() => {
